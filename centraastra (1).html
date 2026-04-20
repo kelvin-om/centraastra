@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centraastra — Centroid Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080c14;--surface:#0e1420;--surface2:#141b2b;--border:rgba(99,140,255,0.15);--border2:rgba(99,140,255,0.3);--accent:#4f8cff;--accent2:#7eb8ff;--muted:#4a5568;--text:#e2e8f0;--text2:#94a3b8;--danger:#f87171;--success:#34d399;--warning:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-family:'Space Mono',monospace;font-size:16px;color:var(--accent2)}
+.logo span{color:var(--text2);font-size:12px;margin-left:8px;font-family:'DM Sans',sans-serif}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:295px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-scroll{overflow-y:auto;flex:1}
+.sb-scroll::-webkit-scrollbar{width:3px}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sec{padding:11px 13px;border-bottom:1px solid var(--border)}
+.lbl{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:9px}
+.fg{margin-bottom:7px}
+.fg label{display:block;font-size:11px;color:var(--text2);margin-bottom:3px}
+select,input[type=number]{width:100%;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+select:focus,input:focus{border-color:var(--accent)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btn{width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover{background:#3a7aee}
+.btn-g{background:transparent;color:var(--text2)}
+.btn-g:hover{background:var(--surface2);color:var(--text)}
+.btn-d{background:transparent;border-color:rgba(248,113,113,0.3);color:var(--danger)}
+.btn-d:hover{background:rgba(248,113,113,0.1)}
+.btn-s{background:var(--success);border-color:var(--success);color:#064e3b;font-weight:600}
+.btn-s:hover{background:#2ac68b}
+.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:8px 4px;font-size:11px;text-align:center;cursor:pointer;color:var(--text2);border:none;border-bottom:2px solid transparent;background:transparent;font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text)}
+.tc{display:none}
+.tc.active{display:block}
+.si{display:flex;align-items:flex-start;padding:6px 8px;border-radius:5px;margin-bottom:3px;cursor:pointer;border:1px solid transparent;background:var(--surface2);font-size:11px;transition:all .15s}
+.si:hover{border-color:var(--border2)}
+.si.sel{border-color:var(--accent);background:rgba(79,140,255,0.1)}
+.sico{width:14px;height:14px;border-radius:2px;flex-shrink:0;margin-right:7px;margin-top:2px}
+.snm{font-weight:500;color:var(--text);font-size:11px}
+.sdm{color:var(--text2);font-size:10px;margin-top:1px}
+.sdl{width:17px;height:17px;border-radius:3px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;margin-left:auto}
+.sdl:hover{background:rgba(248,113,113,0.2);color:var(--danger)}
+.htag{font-size:9px;background:rgba(248,113,113,0.2);color:var(--danger);border-radius:3px;padding:0 3px;border:1px solid rgba(248,113,113,0.3);margin-left:4px}
+.rbox{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;margin-top:8px}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px}
+.rlab{color:var(--text2)}
+.rval{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent2)}
+.rval.big{color:var(--warning);font-size:12px;font-weight:700}
+.div{border-top:1px solid var(--border);margin:6px 0}
+.hint{background:rgba(79,140,255,0.08);border:1px solid rgba(79,140,255,0.2);border-radius:5px;padding:7px 9px;font-size:10px;color:var(--text2);margin-bottom:7px;line-height:1.5}
+.hint b{color:var(--accent2)}
+.ctbl{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}
+.ctbl th{color:var(--text2);text-align:center;padding:4px 2px;border-bottom:1px solid var(--border);font-weight:500;font-size:8px;letter-spacing:.5px;text-transform:uppercase}
+.ctbl td{text-align:center;padding:3px 2px;border-bottom:1px solid rgba(99,140,255,0.06);font-family:'Space Mono',monospace;font-size:8px;color:var(--text)}
+.ctbl .tot td{color:var(--warning);border-top:1px solid var(--border);font-weight:700}
+.canvas-area{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.tip{position:absolute;background:var(--surface);border:1px solid var(--border2);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--text2);pointer-events:none;display:none;font-family:'Space Mono',monospace;white-space:nowrap}
+.hbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(8,12,20,0.85);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:10px;color:var(--text2);white-space:nowrap;backdrop-filter:blur(8px)}
+.empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.empty h3{color:var(--muted);font-size:14px;font-weight:400}
+.empty p{color:var(--muted);font-size:11px;margin-top:4px;opacity:.7}
+.zc{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:3px}
+.zb{width:26px;height:26px;border-radius:5px;background:rgba(8,12,20,0.85);border:1px solid var(--border);color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.zb:hover{border-color:var(--accent);color:var(--accent)}
+.opt-bar{position:absolute;top:10px;right:10px;background:rgba(8,12,20,0.85);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:10px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.opt-bar label{cursor:pointer;display:flex;align-items:center;gap:3px}
+.opt-bar input[type=checkbox]{cursor:pointer;accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">⚔ Centraastra <span>— Centroid Calculator v2</span></div>
+  <div style="color:var(--text2);font-size:11px">P Kelvin Om · PES University</div>
+</header>
+<div class="main">
+
+<div class="sidebar">
+  <div class="tabs">
+    <button class="tab active" onclick="tab('add',0)">Add Shape</button>
+    <button class="tab" onclick="tab('shapes',1)">Shapes (<span id="sc">0</span>)</button>
+    <button class="tab" onclick="tab('results',2)">Results</button>
+  </div>
+
+  <!-- ADD -->
+  <div class="tc active sb-scroll" id="tc-add">
+    <div class="sec">
+      <div class="lbl">Shape Type</div>
+      <div class="fg">
+        <select id="shapeType" onchange="onTC()">
+          <optgroup label="Basic">
+            <option value="rect">Rectangle / Square</option>
+            <option value="tri_r">Right Triangle</option>
+            <option value="tri_i">Isosceles / Equilateral Triangle</option>
+          </optgroup>
+          <optgroup label="Circular">
+            <option value="circle">Full Circle</option>
+            <option value="semi">Semicircle</option>
+            <option value="qtr">Quarter Circle</option>
+            <option value="sector">Sector (any angle)</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Mode</label>
+        <select id="shapeMode">
+          <option value="solid">Solid shape (add area +)</option>
+          <option value="hole">Hole / Cutout (subtract −)</option>
+        </select>
+      </div>
+    </div>
+    <div class="sec" id="dimSec"></div>
+    <div class="sec">
+      <div class="lbl">Reference Point (mm)</div>
+      <div class="hint" id="refHint"></div>
+      <div class="r2">
+        <div class="fg"><label>X</label><input type="number" id="posX" value="0" step="5"></div>
+        <div class="fg"><label>Y</label><input type="number" id="posY" value="0" step="5"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Or drag on canvas after adding</div>
+    </div>
+    <div class="sec">
+      <button class="btn btn-p" onclick="addShape()">+ Add to Canvas</button>
+    </div>
+  </div>
+
+  <!-- SHAPES -->
+  <div class="tc sb-scroll" id="tc-shapes">
+    <div class="sec" style="flex:1">
+      <div id="shapeList"></div>
+      <div id="noShapes" style="color:var(--muted);font-size:12px;text-align:center;padding:20px 0">No shapes yet</div>
+    </div>
+    <div class="sec">
+      <button class="btn btn-g" onclick="tab('add',0)">← Add More</button>
+      <button class="btn btn-d" onclick="clearAll()">✕ Clear All</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="tc sb-scroll" id="tc-results">
+    <div class="sec">
+      <button class="btn btn-s" onclick="calculate()">▶ Calculate Centroid</button>
+      <div id="resultBox" style="display:none">
+        <div class="rbox" style="margin-top:10px">
+          <div class="rrow"><span class="rlab">Total Area ΣA</span><span class="rval" id="rA">—</span></div>
+          <div class="rrow"><span class="rlab">Σ(A·x̄ᵢ)</span><span class="rval" id="rAx">—</span></div>
+          <div class="rrow"><span class="rlab">Σ(A·ȳᵢ)</span><span class="rval" id="rAy">—</span></div>
+          <div class="div"></div>
+          <div class="rrow"><span class="rlab" style="color:var(--warning);font-weight:600">x̄ centroid</span><span class="rval big" id="rX">—</span></div>
+          <div class="rrow"><span class="rlab" style="color:var(--warning);font-weight:600">ȳ centroid</span><span class="rval big" id="rY">—</span></div>
+        </div>
+        <div style="margin-top:12px;padding:0 2px">
+          <div class="lbl">Step-by-step Table</div>
+          <div style="overflow-x:auto"><table class="ctbl" id="ctbl"></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="canvas-area">
+  <canvas id="canvas"></canvas>
+  <div class="tip" id="tip"></div>
+  <div class="zc">
+    <div class="zb" onclick="zoom(1.2)">+</div>
+    <div class="zb" onclick="zoom(0.8)">−</div>
+    <div class="zb" onclick="resetView()" style="font-size:10px">↺</div>
+  </div>
+  <div class="opt-bar">
+    <label><input type="checkbox" id="snapG" checked> Snap5</label>
+    <label><input type="checkbox" id="showL" checked> Labels</label>
+    <label><input type="checkbox" id="showI" checked> LocalG</label>
+  </div>
+  <div class="empty" id="emp"><h3>Canvas is empty</h3><p>Add shapes from the sidebar</p></div>
+  <div class="hbar">Drag=move · Scroll=zoom · Right-drag=pan · Click=select</div>
+</div>
+</div>
+
+<script>
+// ── canvas ──────────────────────────────────────────────────────────────
+const cvs=document.getElementById('canvas'), ctx=cvs.getContext('2d');
+const ca=cvs.parentElement;
+let W,H;
+function resize(){const r=ca.getBoundingClientRect();W=cvs.width=r.width;H=cvs.height=r.height;draw();}
+window.addEventListener('resize',resize);
+
+// ── state ───────────────────────────────────────────────────────────────
+let shapes=[],selId=null,centPt=null;
+let vS=5,vX=0,vY=0;
+let drag=false,dragS=null,dOx=0,dOy=0;
+let pan=false,pSx=0,pSy=0,pSOx=0,pSOy=0;
+
+// ── coords ──────────────────────────────────────────────────────────────
+const m2c=(mx,my)=>({x:vX+mx*vS,y:vY-my*vS});
+const c2m=(cx,cy)=>({x:(cx-vX)/vS,y:(vY-cy)/vS});
+const snp=v=>document.getElementById('snapG').checked?Math.round(v/5)*5:v;
+
+// ── zoom / pan ───────────────────────────────────────────────────────────
+function zoom(f,cx,cy){cx=cx??W/2;cy=cy??H/2;vX=cx+(vX-cx)*f;vY=cy+(vY-cy)*f;vS*=f;draw();}
+function resetView(){vS=5;vX=W*0.12;vY=H*0.82;draw();}
+cvs.addEventListener('wheel',e=>{e.preventDefault();const r=cvs.getBoundingClientRect();zoom(e.deltaY<0?1.1:0.9,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+
+// ── shape meta ─────────────────────────────────────────────────────────
+const META={
+  rect:   {name:'Rectangle',  ref:'Bottom-left corner of the rectangle', col:'#4f8cff'},
+  tri_r:  {name:'Right Tri',  ref:'Bottom-left corner (bounding box). Orientation sets which corner has the right angle.', col:'#34d399'},
+  tri_i:  {name:'Iso Tri',    ref:'Bottom-center of base (midpoint). For equilateral: h = b·0.866', col:'#a78bfa'},
+  circle: {name:'Circle',     ref:'Center of the circle', col:'#fbbf24'},
+  semi:   {name:'Semicircle', ref:'Center of the diameter (straight edge midpoint)', col:'#f87171'},
+  qtr:    {name:'Quarter',    ref:'Corner where the two straight edges meet', col:'#fb923c'},
+  sector: {name:'Sector',     ref:'Center of the full circle (arc origin). 0°=right, 90°=up, angles CCW.', col:'#38bdf8'},
+};
+
+// ── dim UI ──────────────────────────────────────────────────────────────
+function onTC(){
+  const t=document.getElementById('shapeType').value;
+  document.getElementById('refHint').innerHTML=`<b>Ref point:</b> ${META[t].ref}`;
+  const m={
+    rect:`<div class="r2"><div class="fg"><label>Width b (mm)</label><input type="number" id="d1" value="60" min="0.1" step="5"></div><div class="fg"><label>Height h (mm)</label><input type="number" id="d2" value="40" min="0.1" step="5"></div></div>`,
+    tri_r:`<div class="r2"><div class="fg"><label>Base b (mm)</label><input type="number" id="d1" value="60" min="0.1" step="5"></div><div class="fg"><label>Height h (mm)</label><input type="number" id="d2" value="40" min="0.1" step="5"></div></div><div class="fg"><label>Right-angle corner at</label><select id="d3"><option value="BL">Bottom-Left ↗</option><option value="BR">Bottom-Right ↖</option><option value="TL">Top-Left ↘</option><option value="TR">Top-Right ↙</option></select></div>`,
+    tri_i:`<div class="r2"><div class="fg"><label>Base b (mm)</label><input type="number" id="d1" value="60" min="0.1" step="5"></div><div class="fg"><label>Height h (mm)</label><input type="number" id="d2" value="52" min="0.1" step="5"></div></div><div style="font-size:10px;color:var(--text2);margin-top:2px">Equilateral: h = b·√3/2 ≈ b·0.866</div>`,
+    circle:`<div class="fg"><label>Radius r (mm)</label><input type="number" id="d1" value="30" min="0.1" step="5"></div>`,
+    semi:`<div class="fg"><label>Radius r (mm)</label><input type="number" id="d1" value="30" min="0.1" step="5"></div><div class="fg"><label>Curved part faces</label><select id="d2"><option value="up">Up (flat edge at bottom)</option><option value="down">Down (flat edge at top)</option><option value="right">Right (flat edge on left)</option><option value="left">Left (flat edge on right)</option></select></div>`,
+    qtr:`<div class="fg"><label>Radius r (mm)</label><input type="number" id="d1" value="30" min="0.1" step="5"></div><div class="fg"><label>Arc extends toward</label><select id="d2"><option value="Q1">Q1 — up &amp; right</option><option value="Q2">Q2 — up &amp; left</option><option value="Q3">Q3 — down &amp; left</option><option value="Q4">Q4 — down &amp; right</option></select></div>`,
+    sector:`<div class="fg"><label>Radius r (mm)</label><input type="number" id="d1" value="40" min="0.1" step="5"></div><div class="r2"><div class="fg"><label>Start angle (°)</label><input type="number" id="d2" value="-30" step="5"></div><div class="fg"><label>End angle (°)</label><input type="number" id="d3" value="30" step="5"></div></div><div style="font-size:10px;color:var(--text2);margin-top:2px">0°=+X axis, 90°=+Y, angles go CCW</div>`,
+  };
+  document.getElementById('dimSec').innerHTML=`<div class="lbl">Dimensions</div>${m[t]||''}`;
+}
+onTC();
+
+// ── math: area ──────────────────────────────────────────────────────────
+function area(s){
+  const r=s.d1,b=s.d1,h=s.d2;
+  if(s.type==='rect') return b*h;
+  if(s.type==='tri_r'||s.type==='tri_i') return 0.5*b*h;
+  if(s.type==='circle') return Math.PI*r*r;
+  if(s.type==='semi') return 0.5*Math.PI*r*r;
+  if(s.type==='qtr') return 0.25*Math.PI*r*r;
+  if(s.type==='sector'){const a=Math.abs((s.d3-s.d2)*Math.PI/180);return 0.5*r*r*a;}
+  return 0;
+}
+
+// ── math: global centroid ───────────────────────────────────────────────
+function centroid(s){
+  const r=s.d1,b=s.d1,h=s.d2,{x,y}=s;
+  if(s.type==='rect') return{x:x+b/2,y:y+h/2};
+  if(s.type==='tri_r'){const v=triVerts(s);return{x:(v[0][0]+v[1][0]+v[2][0])/3,y:(v[0][1]+v[1][1]+v[2][1])/3};}
+  if(s.type==='tri_i') return{x:x,y:y+h/3};
+  if(s.type==='circle') return{x,y};
+  if(s.type==='semi'){
+    const d=4*r/(3*Math.PI);
+    if(s.d2==='up')return{x,y:y+d};if(s.d2==='down')return{x,y:y-d};
+    if(s.d2==='right')return{x:x+d,y};if(s.d2==='left')return{x:x-d,y};
+  }
+  if(s.type==='qtr'){
+    const d=4*r/(3*Math.PI);
+    if(s.d2==='Q1')return{x:x+d,y:y+d};if(s.d2==='Q2')return{x:x-d,y:y+d};
+    if(s.d2==='Q3')return{x:x-d,y:y-d};if(s.d2==='Q4')return{x:x+d,y:y-d};
+  }
+  if(s.type==='sector'){
+    const a1=s.d2*Math.PI/180,a2=s.d3*Math.PI/180;
+    const alpha=a2-a1,bisect=(a1+a2)/2;
+    const dist=(2*r*Math.sin(Math.abs(alpha)/2))/(1.5*Math.abs(alpha));
+    return{x:x+dist*Math.cos(bisect),y:y+dist*Math.sin(bisect)};
+  }
+  return{x,y};
+}
+
+// ── triangle vertices ────────────────────────────────────────────────────
+function triVerts(s){
+  const{x,y,d1:b,d2:h,d3:o}=s;
+  if(o==='BL')return[[x,y],[x+b,y],[x,y+h]];
+  if(o==='BR')return[[x,y],[x+b,y],[x+b,y+h]];
+  if(o==='TL')return[[x,y],[x+b,y+h],[x,y+h]];
+  if(o==='TR')return[[x+b,y],[x+b,y+h],[x,y+h]];
+  return[[x,y],[x+b,y],[x,y+h]];
+}
+
+// ── hit test ─────────────────────────────────────────────────────────────
+function hit(s,cx,cy){
+  const{x:mx,y:my}=c2m(cx,cy),r=s.d1,b=s.d1,h=s.d2,{x,y}=s;
+  if(s.type==='rect') return mx>=x&&mx<=x+b&&my>=y&&my<=y+h;
+  if(s.type==='tri_r'){const v=triVerts(s);return inTri(mx,my,v[0],v[1],v[2]);}
+  if(s.type==='tri_i') return inTri(mx,my,[x-b/2,y],[x+b/2,y],[x,y+h]);
+  if(s.type==='circle'){const dx=mx-x,dy=my-y;return dx*dx+dy*dy<=r*r;}
+  if(s.type==='semi'){
+    const dx=mx-x,dy=my-y;if(dx*dx+dy*dy>r*r)return false;
+    if(s.d2==='up')return my>=y;if(s.d2==='down')return my<=y;
+    if(s.d2==='right')return mx>=x;if(s.d2==='left')return mx<=x;
+  }
+  if(s.type==='qtr'){
+    const dx=mx-x,dy=my-y;if(dx*dx+dy*dy>r*r)return false;
+    if(s.d2==='Q1')return dx>=0&&dy>=0;if(s.d2==='Q2')return dx<=0&&dy>=0;
+    if(s.d2==='Q3')return dx<=0&&dy<=0;if(s.d2==='Q4')return dx>=0&&dy<=0;
+  }
+  if(s.type==='sector'){
+    const dx=mx-x,dy=my-y;if(dx*dx+dy*dy>r*r)return false;
+    let ang=Math.atan2(dy,dx)*180/Math.PI;
+    let a1=Math.min(s.d2,s.d3),a2=Math.max(s.d2,s.d3);
+    return ang>=a1&&ang<=a2;
+  }
+  return false;
+}
+
+function inTri(px,py,a,b,c){
+  function sgn(p,a,b){return(p[0]-b[0])*(a[1]-b[1])-(a[0]-b[0])*(p[1]-b[1]);}
+  const p=[px,py],d1=sgn(p,a,b),d2=sgn(p,b,c),d3=sgn(p,c,a);
+  return!((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
+}
+
+// ── draw ─────────────────────────────────────────────────────────────────
+function drawGrid(){
+  const st=10*vS,ox=((vX%st)+st)%st,oy=((vY%st)+st)%st;
+  ctx.strokeStyle='rgba(99,140,255,0.06)';ctx.lineWidth=0.5;
+  for(let x=ox;x<W;x+=st){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=oy;y<H;y+=st){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  if(5*vS>7){
+    const s5=5*vS,ox5=((vX%s5)+s5)%s5,oy5=((vY%s5)+s5)%s5;
+    ctx.strokeStyle='rgba(99,140,255,0.03)';
+    for(let x=ox5;x<W;x+=s5){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=oy5;y<H;y+=s5){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  }
+}
+
+function drawAxes(){
+  const o=m2c(0,0);
+  ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath();ctx.moveTo(0,o.y);ctx.lineTo(W,o.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(o.x,0);ctx.lineTo(o.x,H);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath();ctx.moveTo(W-8,o.y-3);ctx.lineTo(W,o.y);ctx.lineTo(W-8,o.y+3);ctx.fill();
+  ctx.beginPath();ctx.moveTo(o.x-3,8);ctx.lineTo(o.x,0);ctx.lineTo(o.x+3,8);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='11px DM Sans';
+  ctx.fillText('X',W-18,o.y-8);ctx.fillText('Y',o.x+8,14);
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(o.x,o.y,3.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px Space Mono';ctx.fillText('O',o.x+5,o.y-5);
+  if(vS>1.5){
+    ctx.fillStyle='rgba(148,163,184,0.45)';ctx.font='9px Space Mono';
+    const tm=vS>=8?10:vS>=4?20:vS>=2?50:100;
+    const xs=Math.ceil(-vX/vS/tm)*tm,xe=Math.ceil((W-vX)/vS/tm)*tm;
+    for(let v=xs;v<=xe;v+=tm){if(v===0)continue;const px=m2c(v,0).x;ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,o.y-3);ctx.lineTo(px,o.y+3);ctx.stroke();ctx.fillStyle='rgba(148,163,184,0.45)';ctx.fillText(v,px-7,o.y+14);}
+    const ys=Math.ceil((vY-H)/vS/tm)*tm,ye=Math.ceil(vY/vS/tm)*tm;
+    for(let v=ys;v<=ye;v+=tm){if(v===0)continue;const py=m2c(0,v).y;ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(o.x-3,py);ctx.lineTo(o.x+3,py);ctx.stroke();ctx.fillStyle='rgba(148,163,184,0.45)';ctx.fillText(v,o.x+6,py+4);}
+  }
+}
+
+function tracePath(s){
+  const r=s.d1,b=s.d1,h=s.d2,{x,y}=s;
+  ctx.beginPath();
+  if(s.type==='rect'){const tl=m2c(x,y+h),br=m2c(x+b,y);ctx.rect(tl.x,tl.y,br.x-tl.x,br.y-tl.y);}
+  else if(s.type==='tri_r'){const v=triVerts(s).map(p=>m2c(p[0],p[1]));ctx.moveTo(v[0].x,v[0].y);ctx.lineTo(v[1].x,v[1].y);ctx.lineTo(v[2].x,v[2].y);ctx.closePath();}
+  else if(s.type==='tri_i'){const p0=m2c(x-b/2,y),p1=m2c(x+b/2,y),p2=m2c(x,y+h);ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.closePath();}
+  else if(s.type==='circle'){const o=m2c(x,y);ctx.arc(o.x,o.y,r*vS,0,Math.PI*2);}
+  else if(s.type==='semi'){
+    const o=m2c(x,y),rp=r*vS;
+    if(s.d2==='up'){ctx.arc(o.x,o.y,rp,Math.PI,0);ctx.lineTo(o.x+rp,o.y);ctx.lineTo(o.x-rp,o.y);}
+    else if(s.d2==='down'){ctx.arc(o.x,o.y,rp,0,Math.PI);ctx.lineTo(o.x-rp,o.y);ctx.lineTo(o.x+rp,o.y);}
+    else if(s.d2==='right'){ctx.arc(o.x,o.y,rp,-Math.PI/2,Math.PI/2);ctx.lineTo(o.x,o.y-rp);}
+    else if(s.d2==='left'){ctx.arc(o.x,o.y,rp,Math.PI/2,-Math.PI/2,true);ctx.lineTo(o.x,o.y+rp);}
+    ctx.closePath();
+  }
+  else if(s.type==='qtr'){
+    const o=m2c(x,y),rp=r*vS;
+    if(s.d2==='Q1'){ctx.moveTo(o.x,o.y);ctx.lineTo(o.x+rp,o.y);ctx.arc(o.x,o.y,rp,0,-Math.PI/2,true);ctx.closePath();}
+    else if(s.d2==='Q2'){ctx.moveTo(o.x,o.y);ctx.lineTo(o.x,o.y-rp);ctx.arc(o.x,o.y,rp,-Math.PI/2,Math.PI,true);ctx.closePath();}
+    else if(s.d2==='Q3'){ctx.moveTo(o.x,o.y);ctx.lineTo(o.x-rp,o.y);ctx.arc(o.x,o.y,rp,Math.PI,Math.PI/2,true);ctx.closePath();}
+    else if(s.d2==='Q4'){ctx.moveTo(o.x,o.y);ctx.lineTo(o.x,o.y+rp);ctx.arc(o.x,o.y,rp,Math.PI/2,0,true);ctx.closePath();}
+  }
+  else if(s.type==='sector'){
+    const o=m2c(x,y),rp=r*vS;
+    // In canvas: y-down, so math angle θ → canvas angle −θ
+    const a1=-s.d2*Math.PI/180,a2=-s.d3*Math.PI/180;
+    const ccw=s.d2<s.d3;
+    ctx.moveTo(o.x,o.y);
+    ctx.arc(o.x,o.y,rp,a1,a2,!ccw);
+    ctx.closePath();
+  }
+}
+
+function drawShape(s){
+  const isSel=s.id===selId,isHole=s.mode==='hole';
+  const col=META[s.type].col;
+  ctx.save();
+  ctx.fillStyle=isHole?'rgba(248,113,113,0.15)':hexA(col,0.28);
+  ctx.strokeStyle=isSel?'#ffffff':isHole?'#f87171':col;
+  ctx.lineWidth=isSel?2.5:1.2;
+  if(isHole)ctx.setLineDash([5,4]);
+  tracePath(s);ctx.fill();ctx.stroke();ctx.setLineDash([]);
+  if(document.getElementById('showI').checked){
+    const cg=centroid(s),cp=m2c(cg.x,cg.y);
+    ctx.fillStyle=isHole?'#f87171':'rgba(255,255,255,0.75)';
+    ctx.beginPath();ctx.arc(cp.x,cp.y,3,0,Math.PI*2);ctx.fill();
+    // draw line from ref to centroid
+    const rp=m2c(s.x,s.y);
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=0.8;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(rp.x,rp.y);ctx.lineTo(cp.x,cp.y);ctx.stroke();ctx.setLineDash([]);
+  }
+  if(document.getElementById('showL').checked){
+    const o=m2c(s.x,s.y);
+    ctx.fillStyle=isHole?'rgba(248,113,113,0.85)':'rgba(255,255,255,0.6)';
+    ctx.font=`${Math.max(9,Math.min(11,vS*2))}px Space Mono`;
+    let lbl='';
+    if(s.type==='rect')lbl=`${s.d1}×${s.d2}`;
+    else if(s.type==='tri_r'||s.type==='tri_i')lbl=`b=${s.d1} h=${s.d2}`;
+    else if(s.type==='sector')lbl=`r=${s.d1}[${s.d2}°→${s.d3}°]`;
+    else lbl=`r=${s.d1}`;
+    if(isHole)lbl+=' [−]';
+    ctx.fillText(lbl,o.x+4,o.y-4);
+  }
+  if(isSel){ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=6;tracePath(s);ctx.stroke();}
+  ctx.restore();
+}
+
+function drawCentroid(){
+  if(!centPt)return;
+  const p=m2c(centPt.x,centPt.y);
+  ctx.save();
+  ctx.strokeStyle='rgba(251,191,36,0.35)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(p.x,0);ctx.lineTo(p.x,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,p.y);ctx.lineTo(W,p.y);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;ctx.beginPath();ctx.moveTo(p.x+Math.cos(a)*8,p.y+Math.sin(a)*8);ctx.lineTo(p.x+Math.cos(a)*16,p.y+Math.sin(a)*16);ctx.stroke();}
+  ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.arc(p.x,p.y,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#080c14';ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fbbf24';ctx.font='bold 11px Space Mono';
+  ctx.fillText(`G (${centPt.x.toFixed(2)}, ${centPt.y.toFixed(2)})`,p.x+12,p.y-10);
+  ctx.restore();
+}
+
+function draw(){
+  if(!W)return;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#080c14';ctx.fillRect(0,0,W,H);
+  drawGrid();drawAxes();
+  shapes.forEach(s=>drawShape(s));
+  drawCentroid();
+  document.getElementById('emp').style.display=shapes.length===0?'block':'none';
+}
+
+// ── shape management ─────────────────────────────────────────────────────
+function addShape(){
+  const type=document.getElementById('shapeType').value;
+  const mode=document.getElementById('shapeMode').value;
+  const x=parseFloat(document.getElementById('posX').value)||0;
+  const y=parseFloat(document.getElementById('posY').value)||0;
+  const d1e=document.getElementById('d1');
+  if(!d1e){alert('Load dims first');return;}
+  const d1=parseFloat(d1e.value);
+  if(!d1||d1<=0){alert('Enter valid dimension');return;}
+  const d2e=document.getElementById('d2');
+  let d2=d2e?(d2e.tagName==='SELECT'?d2e.value:parseFloat(d2e.value)):null;
+  const d3e=document.getElementById('d3');
+  let d3=d3e?(d3e.tagName==='SELECT'?d3e.value:parseFloat(d3e.value)):null;
+  if((type==='rect'||type==='tri_r'||type==='tri_i')&&(!d2||d2<=0)){alert('Enter valid height');return;}
+  if(type==='sector'&&d2===d3){alert('Start ≠ End angle');return;}
+  const s={id:Date.now(),type,mode,d1,d2,d3,x,y};
+  shapes.push(s);selId=s.id;centPt=null;
+  updateList();draw();tab('shapes',1);
+}
+
+function deleteShape(id){
+  shapes=shapes.filter(s=>s.id!==id);
+  if(selId===id)selId=null;centPt=null;updateList();draw();
+}
+
+function clearAll(){
+  if(!shapes.length)return;
+  if(!confirm('Clear all shapes?'))return;
+  shapes=[];selId=null;centPt=null;
+  document.getElementById('resultBox').style.display='none';
+  updateList();draw();
+}
+
+const TL={rect:'Rect',tri_r:'R-Tri',tri_i:'Iso-Tri',circle:'Circle',semi:'Semi',qtr:'Quarter',sector:'Sector'};
+
+function updateList(){
+  document.getElementById('sc').textContent=shapes.length;
+  const list=document.getElementById('shapeList'),none=document.getElementById('noShapes');
+  if(!shapes.length){list.innerHTML='';none.style.display='block';return;}
+  none.style.display='none';
+  list.innerHTML=shapes.map((s,i)=>{
+    const A=area(s),sg=s.mode==='hole'?'−':'+',col=META[s.type].col;
+    let dims=s.type==='rect'?`${s.d1}×${s.d2}mm`:s.type==='tri_r'||s.type==='tri_i'?`b=${s.d1} h=${s.d2}mm`:s.type==='sector'?`r=${s.d1}, ${s.d2}°→${s.d3}°`:`r=${s.d1}mm`;
+    return`<div class="si ${s.id===selId?'sel':''}" onclick="sel(${s.id})">
+      <div class="sico" style="background:${hexA(col,0.35)};border:1px solid ${col}"></div>
+      <div style="flex:1">
+        <div class="snm">#${i+1} ${TL[s.type]} ${s.mode==='hole'?'<span class="htag">HOLE</span>':''}</div>
+        <div class="sdm">${dims} | A=${sg}${A.toFixed(1)}mm² | ref(${s.x},${s.y})</div>
+      </div>
+      <button class="sdl" onclick="event.stopPropagation();deleteShape(${s.id})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function sel(id){selId=id;updateList();draw();}
+
+// ── calculate ─────────────────────────────────────────────────────────────
+function calculate(){
+  if(!shapes.length){alert('Add shapes first');return;}
+  let sA=0,sAx=0,sAy=0;const rows=[];
+  shapes.forEach((s,i)=>{
+    const A=area(s),cg=centroid(s),sg=s.mode==='hole'?-1:1;
+    const As=sg*A;sA+=As;sAx+=As*cg.x;sAy+=As*cg.y;
+    rows.push({i:i+1,tl:TL[s.type],mode:s.mode,A:As,cx:cg.x,cy:cg.y,Ax:As*cg.x,Ay:As*cg.y});
+  });
+  if(Math.abs(sA)<0.001){alert('Total area ≈ 0');return;}
+  const xb=sAx/sA,yb=sAy/sA;
+  centPt={x:xb,y:yb};
+  document.getElementById('rA').textContent=sA.toFixed(3)+' mm²';
+  document.getElementById('rAx').textContent=sAx.toFixed(3)+' mm³';
+  document.getElementById('rAy').textContent=sAy.toFixed(3)+' mm³';
+  document.getElementById('rX').textContent=xb.toFixed(4)+' mm';
+  document.getElementById('rY').textContent=yb.toFixed(4)+' mm';
+  document.getElementById('ctbl').innerHTML=`<thead><tr><th>#</th><th>Shape</th><th>A (mm²)</th><th>x̄ᵢ (mm)</th><th>ȳᵢ (mm)</th><th>A·x̄ᵢ</th><th>A·ȳᵢ</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${r.i}</td><td style="color:${r.mode==='hole'?'#f87171':'#94a3b8'}">${r.tl}${r.mode==='hole'?' [−]':''}</td><td>${r.A.toFixed(2)}</td><td>${r.cx.toFixed(3)}</td><td>${r.cy.toFixed(3)}</td><td>${r.Ax.toFixed(2)}</td><td>${r.Ay.toFixed(2)}</td></tr>`).join('')}
+    <tr class="tot"><td colspan="2">Σ</td><td>${sA.toFixed(2)}</td><td colspan="2">—</td><td>${sAx.toFixed(2)}</td><td>${sAy.toFixed(2)}</td></tr>
+    <tr class="tot"><td colspan="4" style="text-align:left;padding-left:2px">x̄=${sAx.toFixed(2)}/${sA.toFixed(2)} = <span style="color:#fbbf24">${xb.toFixed(4)}</span></td><td colspan="3" style="text-align:left">ȳ=${sAy.toFixed(2)}/${sA.toFixed(2)} = <span style="color:#fbbf24">${yb.toFixed(4)}</span></td></tr>
+  </tbody>`;
+  document.getElementById('resultBox').style.display='block';
+  draw();tab('results',2);
+}
+
+// ── tabs ──────────────────────────────────────────────────────────────────
+function tab(name,idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('active',c.id===`tc-${name}`));
+}
+
+// ── mouse ─────────────────────────────────────────────────────────────────
+cvs.addEventListener('mousedown',e=>{
+  const r=cvs.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+  if(e.button===2||e.button===1){pan=true;pSx=cx;pSy=cy;pSOx=vX;pSOy=vY;cvs.style.cursor='grabbing';return;}
+  let h=null;for(let i=shapes.length-1;i>=0;i--){if(hit(shapes[i],cx,cy)){h=shapes[i];break;}}
+  if(h){drag=true;dragS=h;selId=h.id;const m=c2m(cx,cy);dOx=m.x-h.x;dOy=m.y-h.y;cvs.style.cursor='grabbing';centPt=null;}
+  else selId=null;
+  updateList();draw();
+});
+cvs.addEventListener('mousemove',e=>{
+  const r=cvs.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+  if(pan){vX=pSOx+(cx-pSx);vY=pSOy+(cy-pSy);draw();return;}
+  if(drag&&dragS){
+    const m=c2m(cx,cy);dragS.x=snp(m.x-dOx);dragS.y=snp(m.y-dOy);centPt=null;draw();
+    const t=document.getElementById('tip');t.style.display='block';t.style.left=(cx+14)+'px';t.style.top=(cy-28)+'px';
+    t.textContent=`x=${dragS.x.toFixed(1)}, y=${dragS.y.toFixed(1)}`;updateList();return;
+  }
+  let hov=false;for(let i=shapes.length-1;i>=0;i--){if(hit(shapes[i],cx,cy)){cvs.style.cursor='grab';hov=true;break;}}
+  if(!hov)cvs.style.cursor='crosshair';
+  document.getElementById('tip').style.display='none';
+});
+cvs.addEventListener('mouseup',()=>{drag=false;dragS=null;pan=false;cvs.style.cursor='crosshair';document.getElementById('tip').style.display='none';});
+cvs.addEventListener('contextmenu',e=>e.preventDefault());
+
+// ── util ──────────────────────────────────────────────────────────────────
+function hexA(h,a){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;}
+
+// ── init ──────────────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{resize();resetView();});
+['showL','showI','snapG'].forEach(id=>document.getElementById(id).addEventListener('change',draw));
+</script>
+</body>
+</html>
